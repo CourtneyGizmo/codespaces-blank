@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Last Call Payroll</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&display=swap');
+  :root {
+    --bg:#0a0a0a;--surface:#141414;--surface2:#1c1c1c;--border:#2a2a2a;--border2:#333;
+    --gold:#d4a843;--gold2:#f0c96a;--red:#c94a4a;--green:#4ac97a;--blue:#4a9fc9;
+    --text:#e8e2d8;--muted:#888;--muted2:#555;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:13px;min-height:100vh;}
+  .app{display:flex;flex-direction:column;min-height:100vh;}
+  .header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:0.15em;color:var(--gold);}
+  .logo span{color:var(--muted);font-size:13px;font-family:'IBM Plex Mono',monospace;letter-spacing:0.05em;margin-left:12px;vertical-align:middle;}
+  .mode-toggle{display:flex;background:var(--surface2);border-radius:6px;border:1px solid var(--border);overflow:hidden;}
+  .mode-btn{padding:6px 14px;font-family:inherit;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+  .mode-btn.active{background:var(--gold);color:#000;font-weight:500;}
+  .nav{background:var(--surface);border-bottom:1px solid var(--border);display:flex;padding:0 24px;gap:4px;overflow-x:auto;}
+  .nav-item{padding:12px 16px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap;}
+  .nav-item.active{color:var(--gold);border-bottom-color:var(--gold);}
+  .nav-item:hover:not(.active){color:var(--text);}
+  .main{flex:1;padding:24px;max-width:1100px;margin:0 auto;width:100%;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:8px;}
+  .card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .card-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:0.12em;color:var(--gold);}
+  .card-body{padding:18px;}
+  .btn{cursor:pointer;border:none;border-radius:5px;padding:8px 16px;font-family:inherit;font-size:11px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;transition:all 0.15s;display:inline-flex;align-items:center;gap:6px;}
+  .btn-gold{background:var(--gold);color:#000;}.btn-gold:hover{background:var(--gold2);}
+  .btn-outline{background:transparent;color:var(--gold);border:1px solid var(--gold);}.btn-outline:hover{background:var(--gold);color:#000;}
+  .btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}.btn-ghost:hover{border-color:var(--gold);color:var(--gold);}
+  .btn-danger{background:transparent;color:var(--red);border:1px solid #3a2020;}.btn-danger:hover{background:#2a1010;}
+  .btn-green{background:#1a3a26;color:var(--green);border:1px solid #1a4a2a;}.btn-green:hover{background:#1a4a2a;}
+  .btn-sm{padding:5px 10px;font-size:10px;}
+  .btn-icon{width:28px;height:28px;padding:0;justify-content:center;border-radius:4px;}
+  .form-group{display:flex;flex-direction:column;gap:5px;}
+  .form-label{font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);}
+  .form-input,.form-select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:5px;padding:8px 12px;font-family:inherit;font-size:12px;outline:none;width:100%;transition:border 0.15s;}
+  .form-input:focus,.form-select:focus{border-color:var(--gold);}
+  textarea.form-input{resize:vertical;}
+  .form-row{display:flex;gap:12px;flex-wrap:wrap;}
+  .form-row .form-group{flex:1;min-width:140px;}
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;}
+  th{text-align:left;padding:8px 12px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);font-weight:400;}
+  td{padding:10px 12px;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:12px;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:var(--surface2);}
+  .badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-weight:500;}
+  .badge-gold{background:#2a2010;color:var(--gold);border:1px solid #3a3010;}
+  .badge-green{background:#102a18;color:var(--green);border:1px solid #103a18;}
+  .badge-red{background:#2a1010;color:var(--red);border:1px solid #3a1010;}
+  .badge-blue{background:#101a2a;color:var(--blue);border:1px solid #10203a;}
+  .badge-gray{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+  .badge-chip{background:#1a1a1a;color:#e8e2d8;border:1px solid #3a3a3a;}
+  .avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2a2010,#3a3020);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--gold);flex-shrink:0;border:1px solid var(--border);}
+  .avatar-sm{width:24px;height:24px;font-size:11px;}
+  .chip-token{width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#3a3a3a,#0a0a0a);border:2px solid #3a3a3a;box-shadow:0 0 8px #ffffff18,inset 0 1px 2px #ffffff22;display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;flex-shrink:0;}
+  .chip-token-sm{width:22px;height:22px;font-size:8px;border-width:1px;}
+  .chip-count-big{font-family:'Bebas Neue',sans-serif;font-size:42px;color:#e8e2d8;line-height:1;}
+  .schedule-grid{display:grid;gap:2px;}
+  .schedule-day{background:var(--surface2);border-radius:6px;border:1px solid var(--border);overflow:hidden;}
+  .schedule-day-header{padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .schedule-day-name{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;color:var(--gold);}
+  .schedule-slots{padding:8px;display:flex;flex-direction:column;gap:4px;min-height:60px;}
+  .shift-chip-card{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:5px 8px;cursor:pointer;transition:all 0.15s;}
+  .shift-chip-card:hover{border-color:var(--gold);}
+  .add-shift-btn{border:1px dashed var(--border);border-radius:4px;padding:5px 8px;color:var(--muted2);font-size:11px;cursor:pointer;text-align:center;transition:all 0.15s;background:transparent;width:100%;font-family:inherit;}
+  .add-shift-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+  .modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .modal-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:0.1em;color:var(--gold);}
+  .modal-body{padding:20px;display:flex;flex-direction:column;gap:14px;}
+  .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+  .toast{position:fixed;bottom:20px;right:20px;background:var(--surface);border:1px solid var(--gold);border-radius:6px;padding:10px 16px;font-size:12px;color:var(--gold);z-index:999;animation:slideUp 0.2s ease;pointer-events:none;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  .empty-state{text-align:center;padding:32px;color:var(--muted2);font-size:12px;}
+  .info-box{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-size:12px;color:var(--muted);}
+  .pending-banner{background:#2a2010;border:1px solid var(--gold);border-radius:8px;padding:14px 16px;margin-bottom:16px;}
+  ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+  input[type=number]::-webkit-inner-spin-button{opacity:0.5;}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+const ROLES=[
+  {id:'kitchen',        label:'Kitchen',                color:'#e07a3a', till:true,  tipCalc:false},
+  {id:'open-bar',       label:'Opening Bartender',      color:'#4a9fc9', till:true,  tipCalc:true },
+  {id:'closing-bar',    label:'Closing Bartender',      color:'#9a6ac9', till:true,  tipCalc:true },
+  {id:'server',         label:'Cocktail Server',        color:'#4ac97a', till:true,  tipCalc:false},
+  {id:'karaoke',        label:'Karaoke',                color:'#c94a8a', till:false, tipCalc:false},
+  {id:'clerical',       label:'Clerical/Admin',         color:'#888',    till:false, tipCalc:false},
+  {id:'door',           label:'Door',                   color:'#c9b44a', till:true,  tipCalc:false},
+  {id:'foh-meeting',    label:'FOH Meeting',            color:'#4ac9b4', till:false, tipCalc:false},
+  {id:'boh-meeting',    label:'BOH Meeting',            color:'#c94a4a', till:false, tipCalc:false},
+  {id:'unscheduled',    label:'Unscheduled Shift',      color:'#555',    till:true,  tipCalc:false},
+];
+// Roles eligible for tip earning (server/bar side)
+const TIP_EARN_ROLES=['Opening Bartender','Closing Bartender','Cocktail Server'];
+// Roles that are kitchen
+const KITCHEN_ROLES=['Kitchen'];
+
+let S={
+  mode:'manager',activeNav:'schedule',currentUser:null,
+  managerPin:'0000', managerPinSet:false, managerAuthed:false,
+  employees:[
+    {id:1,name:'Alex Rivera',role:'Closing Bartender',pin:'1234',bank:200,hasTill:true,chipsOwed:3,mustSetPin:false},
+    {id:2,name:'Jordan Lee',role:'Cocktail Server',pin:'2222',bank:0,hasTill:false,chipsOwed:1,mustSetPin:false},
+    {id:3,name:'Sam Okafor',role:'Open Bartender',pin:'3333',bank:150,hasTill:true,chipsOwed:0,mustSetPin:false},
+    {id:4,name:'Casey Tran',role:'Karaoke',pin:'4444',bank:0,hasTill:false,chipsOwed:2,mustSetPin:false},
+    {id:5,name:'Morgan Wells',role:'Kitchen',pin:'5555',bank:100,hasTill:true,chipsOwed:0,mustSetPin:false},
+  ],
+  weekStart:getMonday(new Date()),
+  schedule:{},
+  clockEntries:[],
+  pendingVerifications:[],
+  alerts:[],
+  chipLog:[],
+  tillCounts:[],
+  tipCalcs:[],   // {id, date, bartenderId, shiftType, foodSales, kitchenPool, kitchenAllocations, totalTips, remainingTips, serverAllocations, createdAt}
+  modal:null,toast:null,toastTimer:null,
+};
+let ids={shift:100,entry:200,verify:300,alert:400,chip:500,till:600,tip:700};
+const DENOMS=[
+  {key:'d100',label:'$100 Bills',value:100},
+  {key:'d50', label:'$50 Bills', value:50},
+  {key:'d20', label:'$20 Bills', value:20},
+  {key:'d10', label:'$10 Bills', value:10},
+  {key:'d5',  label:'$5 Bills',  value:5},
+  {key:'d1',  label:'$1 Bills',  value:1},
+  {key:'q',   label:'Quarters',  value:0.25},
+  {key:'di',  label:'Dimes',     value:0.10},
+  {key:'n',   label:'Nickels',   value:0.05},
+  {key:'p',   label:'Pennies',   value:0.01},
+];
+function nid(k){return ids[k]++;}
+function getMonday(d){const dt=new Date(d),day=dt.getDay(),diff=dt.getDate()-day+(day===0?-6:1);dt.setDate(diff);dt.setHours(0,0,0,0);return dt;}
+function addDays(d,n){const dt=new Date(d);dt.setDate(dt.getDate()+n);return dt;}
+function fmtDate(d){return d.toISOString().slice(0,10);}
+function fmtDisp(s){return new Date(s+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});}
+function empById(id){return S.employees.find(e=>e.id===id);}
+function roleColor(roleName){const r=ROLES.find(r=>r.label===roleName);return r?r.color:'#888';}
+function initials(name){return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function showToast(msg){if(S.toastTimer)clearTimeout(S.toastTimer);S.toast=msg;S.toastTimer=setTimeout(()=>{S.toast=null;render();},2500);render();}
+function closeModal(){S.modal=null;render();}
+
+function render(){
+  const app=document.getElementById('app');
+  app.innerHTML='';
+  if(S.toast){const t=document.createElement('div');t.className='toast';t.textContent=S.toast;app.appendChild(t);}
+  if(S.modal)app.appendChild(buildModal());
+  const wrap=document.createElement('div');wrap.className='app';
+  wrap.innerHTML=buildHeader();
+  const nav=document.createElement('div');nav.className='nav';nav.innerHTML=buildNav();wrap.appendChild(nav);
+  const main=document.createElement('div');main.className='main';
+  if(S.mode==='manager'){
+    if(S.activeNav==='schedule')main.appendChild(buildScheduleView());
+    else if(S.activeNav==='staff')main.appendChild(buildStaffView());
+    else if(S.activeNav==='chips')main.appendChild(buildChipsManagerView());
+    else if(S.activeNav==='till')main.appendChild(buildTillManagerView());
+    else if(S.activeNav==='alerts')main.appendChild(buildAlertsView());
+  } else {
+    main.appendChild(buildEmployeeView());
+  }
+  wrap.appendChild(main);
+  app.appendChild(wrap);
+  bindEvents();
+}
+
+function buildHeader(){
+  const unread=S.alerts.filter(a=>!a.read).length;
+  const emp=S.currentUser?empById(S.currentUser):null;
+  return `<div class="header">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="logo">Last Call <span>Payroll</span></div>
+      ${emp?`<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 12px">
+        <div class="avatar avatar-sm" style="color:${roleColor(emp.role)}">${initials(emp.name)}</div>
+        <span style="font-size:12px">${emp.name}</span>
+      </div>`:''}
+    </div>
+    <div style="display:flex;align-items:center;gap:12px">
+      ${unread>0?`<div style="background:#2a1010;border:1px solid var(--red);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--red);cursor:pointer" onclick="setNav('alerts')">⚠ ${unread} Alert${unread>1?'s':''}</div>`:''}
+      ${S.managerAuthed?`<button class="btn btn-ghost btn-sm" onclick="openModal({type:'manager-change-pin'})">🔑 PIN</button><button class="btn btn-ghost btn-sm" onclick="openModal({type:'data-manage'})">💾 Data</button>`:''}
+      <div class="mode-toggle">
+        <button class="mode-btn ${S.mode==='manager'?'active':''}" onclick="setMode('manager')">Manager</button>
+        <button class="mode-btn ${S.mode==='employee'?'active':''}" onclick="setMode('employee')">Employee${S.managerAuthed?' 🔒':''}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildNav(){
+  const mgr=[['schedule','📅 Schedule'],['staff','👥 Staff'],['chips','⚫ Chips'],['till','💵 Till'],['alerts','🔔 Alerts']];
+  const emp=[['emp-home','🏠 Home'],['emp-chips','⚫ My Chips'],['emp-tips','$ My Tips'],['emp-till','💵 My Till']];
+  return (S.mode==='manager'?mgr:emp).map(([k,l])=>`<div class="nav-item ${S.activeNav===k?'active':''}" onclick="setNav('${k}')">${l}</div>`).join('');
+}
+
+function buildScheduleView(){
+  const div=document.createElement('div');
+  const days=Array.from({length:7},(_,i)=>fmtDate(addDays(S.weekStart,i)));
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold)">Weekly Schedule</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">${fmtDisp(days[0])} – ${fmtDisp(days[6])}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="prevWeek()">← Prev</button>
+        <button class="btn btn-ghost btn-sm" onclick="todayWeek()">Today</button>
+        <button class="btn btn-ghost btn-sm" onclick="nextWeek()">Next →</button>
+        <button class="btn btn-gold btn-sm" onclick="openModal({type:'add-shift',date:'${fmtDate(new Date())}'})">+ Add Shift</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <div class="schedule-grid" style="grid-template-columns:repeat(7,minmax(128px,1fr));min-width:700px">
+      ${days.map(date=>{
+        const shifts=S.schedule[date]||[],isToday=date===fmtDate(new Date());
+        return `<div class="schedule-day" style="${isToday?'border-color:var(--gold)':''}">
+          <div class="schedule-day-header">
+            <div>
+              <div class="schedule-day-name" style="${isToday?'color:var(--gold2)':''}">${new Date(date+'T00:00:00').toLocaleDateString('en-US',{weekday:'short'})}</div>
+              <div style="font-size:11px;color:var(--muted)">${new Date(date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+            </div>
+            ${isToday?'<span class="badge badge-gold" style="font-size:9px">Today</span>':''}
+          </div>
+          <div class="schedule-slots">
+            ${shifts.map(s=>{const emp=empById(s.empId),rc=roleColor(s.role);return `
+            <div class="shift-chip-card" onclick="openModal({type:'edit-shift',date:'${date}',shiftId:${s.id}})">
+              <div class="avatar avatar-sm" style="color:${rc};background:${rc}18;border-color:${rc}30">${emp?initials(emp.name):'?'}</div>
+              <div style="min-width:0;flex:1">
+                <div style="font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${emp?emp.name.split(' ')[0]:'TBD'}</div>
+                <div style="font-size:10px;color:${rc}">${s.role.replace(' Bartender',' Bar.')}</div>
+              </div>
+              <div style="font-size:10px;color:var(--muted2)">${s.startTime||''}</div>
+            </div>`}).join('')}
+            <button class="add-shift-btn" onclick="openModal({type:'add-shift',date:'${date}'})">+ shift</button>
+          </div>
+        </div>`;
+      }).join('')}
+    </div></div>
+    <div style="margin-top:20px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Today's Roster</div><span style="font-size:11px;color:var(--muted)">${fmtDisp(fmtDate(new Date()))}</span></div>
+        <div class="card-body">${buildTodayRoster()}</div>
+      </div>
+    </div>`;
+  return div;
+}
+
+function buildTodayRoster(){
+  const today=fmtDate(new Date()),shifts=S.schedule[today]||[];
+  if(!shifts.length) return '<div class="empty-state">No shifts scheduled today.</div>';
+  return '<div style="display:flex;flex-direction:column;gap:8px">'+shifts.map(s=>{
+    const emp=empById(s.empId),rc=roleColor(s.role);
+    const isIn=S.clockEntries.some(e=>e.empId===s.empId&&e.schedDate===today&&!e.clockOut);
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+      <div class="avatar" style="color:${rc};background:${rc}15;border-color:${rc}30">${emp?initials(emp.name):'?'}</div>
+      <div style="flex:1"><div style="font-size:13px">${emp?emp.name:'Unassigned'}</div>
+      <div style="font-size:11px;color:${rc}">${s.role}${s.startTime?' · '+s.startTime:''}${s.endTime?' – '+s.endTime:''}</div></div>
+      ${isIn?'<span class="badge badge-green">Clocked In</span>':'<span class="badge badge-gray">Not In</span>'}
+      <button class="btn btn-ghost btn-sm" onclick="openModal({type:'edit-shift',date:'${today}',shiftId:${s.id}})">Edit</button>
+    </div>`;
+  }).join('')+'</div>';
+}
+
+function buildStaffView(){
+  const div=document.createElement('div');
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold)">Staff Roster</div>
+      <button class="btn btn-gold btn-sm" onclick="openModal({type:'add-emp'})">+ Add Employee</button>
+    </div>
+    <div class="card">
+      <div class="card-body" style="padding:0"><div class="table-wrap"><table>
+        <thead><tr><th>Employee</th><th>Role</th><th>Till / Bank</th><th>Chips Owed</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>${S.employees.map(emp=>{
+          const isIn=S.clockEntries.some(e=>e.empId===emp.id&&!e.clockOut),rc=roleColor(emp.role);
+          return `<tr>
+            <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar" style="color:${rc};background:${rc}15;border-color:${rc}30">${initials(emp.name)}</div>${emp.name}</div></td>
+            <td><span style="color:${rc};font-size:11px">${emp.role}</span></td>
+            <td>${emp.hasTill?`<span class="badge badge-gold">$${emp.bank} bank</span>`:'<span class="badge badge-gray">No Till</span>'}</td>
+            <td><div style="display:flex;align-items:center;gap:6px">
+              ${emp.chipsOwed>0?`${Array.from({length:Math.min(emp.chipsOwed,5)}).map(()=>'<div class="chip-token chip-token-sm">●</div>').join('')}${emp.chipsOwed>5?`<span style="font-size:11px;color:var(--muted)">+${emp.chipsOwed-5}</span>`:''} <span style="font-size:12px">${emp.chipsOwed}</span>`:'<span style="color:var(--muted2);font-size:11px">0</span>'}
+            </div></td>
+            <td>${isIn?'<span class="badge badge-green">On Clock</span>':emp.mustSetPin?'<span class="badge badge-gold">PIN Not Set</span>':'<span class="badge badge-gray">Off</span>'}</td>
+            <td><div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="openModal({type:'edit-emp',empId:${emp.id}})">Edit</button>
+              <button class="btn btn-outline btn-sm" onclick="openModal({type:'change-emp-pin',empId:${emp.id}})">PIN</button>
+              <button class="btn btn-danger btn-sm" onclick="removeEmp(${emp.id})">✕</button>
+            </div></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div></div>
+    </div>`;
+  return div;
+}
+
+function buildChipsManagerView(){
+  const div=document.createElement('div');
+  const totalOwed=S.employees.reduce((a,e)=>a+e.chipsOwed,0);
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold)">⚫ Black Chip Tracker</div>
+      <div style="font-size:11px;color:var(--muted)">Total owed: <strong style="color:#e8e2d8">${totalOwed} chips</strong></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:24px">
+      ${S.employees.map(emp=>{
+        const rc=roleColor(emp.role);
+        const recent=S.chipLog.filter(l=>l.empId===emp.id).slice(-3).reverse();
+        return `<div class="card">
+          <div class="card-header" style="padding:12px 14px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="avatar avatar-sm" style="color:${rc};background:${rc}15;border-color:${rc}30">${initials(emp.name)}</div>
+              <div><div style="font-size:12px">${emp.name}</div><div style="font-size:10px;color:${rc}">${emp.role}</div></div>
+            </div>
+          </div>
+          <div class="card-body" style="padding:12px 14px">
+            <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:10px">
+              <div>
+                <div style="font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:2px">Chips Owed</div>
+                <div class="chip-count-big">${emp.chipsOwed}</div>
+              </div>
+              <div class="chip-token" style="width:44px;height:44px;font-size:18px">●</div>
+            </div>
+            <div style="display:flex;gap:6px;margin-bottom:${recent.length?'10px':'0'}">
+              <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="quickChip(${emp.id},-1)" ${emp.chipsOwed===0?'disabled style="opacity:0.3"':''}>−1</button>
+              <button class="btn btn-ghost btn-sm" style="flex:1;justify-content:center" onclick="quickChip(${emp.id},1)">+1</button>
+              <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="openModal({type:'chip-adjust',empId:${emp.id}})">Edit</button>
+            </div>
+            ${recent.length?`<div style="border-top:1px solid var(--border);padding-top:8px">${recent.map(l=>{
+              const tc={earned:'var(--green)',collected:'var(--blue)',redeemed:'var(--red)',adjustment:'var(--gold)'}[l.type]||'var(--muted)';
+              return `<div style="font-size:10px;color:var(--muted2);margin-bottom:2px">${l.date} · <span style="color:${tc}">${l.type}</span> ${l.qty>0?'+':''}${l.qty}</div>`;
+            }).join('')}</div>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Chip Activity Log</div></div>
+      <div class="card-body" style="padding:0">
+        ${S.chipLog.length===0?'<div class="empty-state">No chip activity yet.</div>':`
+        <div class="table-wrap"><table>
+          <thead><tr><th>Employee</th><th>Date</th><th>Type</th><th>Change</th><th>Note</th></tr></thead>
+          <tbody>${[...S.chipLog].reverse().map(l=>{
+            const emp=empById(l.empId);
+            const tc={earned:'var(--green)',collected:'var(--blue)',redeemed:'var(--red)',adjustment:'var(--gold)'}[l.type]||'var(--muted)';
+            return `<tr>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar avatar-sm" style="color:${roleColor(emp?.role||'')}">${initials(emp?.name||'?')}</div>${emp?.name||'?'}</div></td>
+              <td style="color:var(--muted)">${l.date}</td>
+              <td><span class="badge" style="background:${tc}18;color:${tc};border-color:${tc}30">${l.type}</span></td>
+              <td style="color:${l.qty>0?'var(--green)':l.qty<0?'var(--red)':'var(--muted)'}">${l.qty>0?'+':''}${l.qty}</td>
+              <td style="color:var(--muted2);font-size:11px">${l.note||'—'}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table></div>`}
+      </div>
+    </div>`;
+  return div;
+}
+
+function buildTillManagerView(){
+  const div=document.createElement('div');
+  const today=fmtDate(new Date());
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold)">Till & Bank Management</div>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><div class="card-title">Employee Banks</div></div>
+      <div class="card-body" style="padding:0"><table>
+        <thead><tr><th>Employee</th><th>Role</th><th>Bank</th><th>Till</th><th>Actions</th></tr></thead>
+        <tbody>${S.employees.map(emp=>{
+          const todayOpen=S.tillCounts.find(t=>t.empId===emp.id&&t.type==='open'&&t.date===today);
+          const todayClose=S.tillCounts.find(t=>t.empId===emp.id&&t.type==='close'&&t.date===today);
+          return `<tr>
+            <td><div style="display:flex;align-items:center;gap:10px"><div class="avatar avatar-sm" style="color:${roleColor(emp.role)}">${initials(emp.name)}</div>${emp.name}</div></td>
+            <td><span style="color:${roleColor(emp.role)};font-size:11px">${emp.role}</span></td>
+            <td><span style="color:var(--gold)">${emp.hasTill?'$'+emp.bank:'—'}</span></td>
+            <td>
+              ${emp.hasTill?`<div style="display:flex;gap:4px;flex-wrap:wrap">
+                <span class="badge ${todayOpen?'badge-green':'badge-gray'}">Open ${todayOpen?'✓':'—'}</span>
+                <span class="badge ${todayClose?'badge-gold':'badge-gray'}">Close ${todayClose?'✓':'—'}</span>
+              </div>`:'<span class="badge badge-gray">No Till</span>'}
+            </td>
+            <td><button class="btn btn-ghost btn-sm" onclick="openModal({type:'bank-setup',empId:${emp.id}})">Set Bank</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Till Count History</div></div>
+      <div class="card-body" style="padding:0">
+        ${S.tillCounts.length===0?'<div class="empty-state">No till counts yet.</div>':`
+        <div class="table-wrap"><table>
+          <thead><tr><th>Employee</th><th>Type</th><th>Date</th><th>Count Total</th><th>Bank</th><th>Cash Sales</th><th>POS Total</th><th>Variance</th></tr></thead>
+          <tbody>${[...S.tillCounts].reverse().map(t=>{
+            const emp=empById(t.empId);
+            const v=t.variance;
+            const vColor=Math.abs(v)<0.01?'var(--green)':v<0?'var(--red)':'var(--gold)';
+            return `<tr>
+              <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar avatar-sm" style="color:${roleColor(emp?.role||'')}">${initials(emp?.name||'?')}</div>${emp?.name||'?'}</div></td>
+              <td><span class="badge ${t.type==='open'?'badge-blue':'badge-gold'}">${t.type}</span></td>
+              <td style="color:var(--muted)">${t.date}</td>
+              <td>$${t.total.toFixed(2)}</td>
+              <td style="color:var(--muted)">$${t.bank.toFixed(2)}</td>
+              <td>${t.type==='close'?'$'+(t.total-t.bank).toFixed(2):'—'}</td>
+              <td>${t.posTotal!=null?'$'+t.posTotal.toFixed(2):'—'}</td>
+              <td style="color:${vColor};font-weight:500">${t.type==='close'?(v>0?'+':'')+`$${v.toFixed(2)}`:'—'}</td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table></div>`}
+      </div>
+    </div>`;
+  return div;
+}
+
+function buildEmpTill(){
+  const div=document.createElement('div');
+  const emp=empById(S.currentUser);
+  if(!emp||!emp.hasTill){
+    div.innerHTML=`<div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold);margin-bottom:20px">💵 Till</div>
+    <div class="card"><div class="card-body"><div class="empty-state">No till assigned to your account.<br>See your manager to set up a till.</div></div></div>`;
+    return div;
+  }
+  const today=fmtDate(new Date());
+  const todayOpen=S.tillCounts.find(t=>t.empId===S.currentUser&&t.type==='open'&&t.date===today);
+  const todayClose=S.tillCounts.find(t=>t.empId===S.currentUser&&t.type==='close'&&t.date===today);
+  const myHistory=S.tillCounts.filter(t=>t.empId===S.currentUser).slice(-5).reverse();
+
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold)">💵 My Till</div>
+      <button class="btn btn-ghost btn-sm" onclick="logoutEmployee()">← Switch User</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div class="card">
+        <div class="card-header"><div class="card-title">Starting Bank</div></div>
+        <div class="card-body" style="text-align:center">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;color:var(--gold)">$${emp.bank.toFixed(2)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Set by manager</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Today's Status</div></div>
+        <div class="card-body">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12px;color:var(--muted)">Opening Count</span>
+              <span class="badge ${todayOpen?'badge-green':'badge-gray'}">${todayOpen?'✓ Done':'Pending'}</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <span style="font-size:12px;color:var(--muted)">Closing Count</span>
+              <span class="badge ${todayClose?'badge-gold':'badge-gray'}">${todayClose?'✓ Done':'Pending'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <button class="btn ${todayOpen?'btn-ghost':'btn-gold'}" style="flex:1;justify-content:center;padding:14px" onclick="openModal({type:'till-count',countType:'open',empId:${S.currentUser}})">
+        ${todayOpen?'✓ Opening Count Done':'💵 Open Till Count'}
+      </button>
+      <button class="btn ${todayClose?'btn-ghost':todayOpen?'btn-gold':'btn-ghost'}" style="flex:1;justify-content:center;padding:14px" onclick="openModal({type:'till-count',countType:'close',empId:${S.currentUser}})">
+        ${todayClose?'✓ Closing Count Done':'🔒 Close Till Count'}
+      </button>
+    </div>
+
+    ${todayClose?`
+    <div style="background:${Math.abs(todayClose.variance)<0.01?'#102a18':todayClose.variance<0?'#2a1010':'#2a2010'};border:1px solid ${Math.abs(todayClose.variance)<0.01?'var(--green)':todayClose.variance<0?'var(--red)':'var(--gold)'};border-radius:8px;padding:16px;margin-bottom:20px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:0.1em;margin-bottom:10px;color:${Math.abs(todayClose.variance)<0.01?'var(--green)':todayClose.variance<0?'var(--red)':'var(--gold)'}">
+        ${Math.abs(todayClose.variance)<0.01?'✓ Till Balanced':todayClose.variance<0?'⚠ Till Short':'⚠ Till Over'}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;font-size:12px">
+        <div><div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:0.1em">Closing Count</div><div style="font-size:18px;color:#e8e2d8;font-family:'Bebas Neue',sans-serif">$${todayClose.total.toFixed(2)}</div></div>
+        <div><div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:0.1em">Leave Bank</div><div style="font-size:18px;color:var(--gold);font-family:'Bebas Neue',sans-serif">$${todayClose.bank.toFixed(2)}</div></div>
+        <div><div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:0.1em">Cash Sales</div><div style="font-size:18px;color:var(--blue);font-family:'Bebas Neue',sans-serif">$${(todayClose.total-todayClose.bank).toFixed(2)}</div></div>
+        <div><div style="color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:0.1em">vs POS</div><div style="font-size:18px;font-family:'Bebas Neue',sans-serif;color:${Math.abs(todayClose.variance)<0.01?'var(--green)':todayClose.variance<0?'var(--red)':'var(--gold)'}">${todayClose.variance>0?'+':''}$${todayClose.variance.toFixed(2)}</div></div>
+      </div>
+    </div>`:todayOpen?`
+    <div class="info-box" style="margin-bottom:20px">Opening count complete. Complete your closing count at end of shift.</div>`:''}
+
+    <div class="card">
+      <div class="card-header"><div class="card-title">Recent Till History</div></div>
+      <div class="card-body" style="padding:0">
+        ${myHistory.length===0?'<div class="empty-state">No history yet.</div>':`
+        <table><thead><tr><th>Date</th><th>Type</th><th>Total</th><th>Variance</th></tr></thead>
+        <tbody>${myHistory.map(t=>{
+          const v=t.variance;
+          const vc=Math.abs(v)<0.01?'var(--green)':v<0?'var(--red)':'var(--gold)';
+          return `<tr>
+            <td style="color:var(--muted)">${t.date}</td>
+            <td><span class="badge ${t.type==='open'?'badge-blue':'badge-gold'}">${t.type}</span></td>
+            <td>$${t.total.toFixed(2)}</td>
+            <td style="color:${t.type==='close'?vc:'var(--muted2)'}">${t.type==='close'?(v>0?'+':'')+`$${v.toFixed(2)}`:'—'}</td>
+          </tr>`;
+        }).join('')}</tbody></table>`}
+      </div>
+    </div>`;
+  return div;
+}
+
+function buildAlertsView(){
+  const div=document.createElement('div');
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold)">Manager Alerts</div>
+      ${S.alerts.some(a=>!a.read)?'<button class="btn btn-ghost btn-sm" onclick="markAllRead()">Mark All Read</button>':''}
+    </div>
+    ${S.alerts.length===0?'<div class="card"><div class="card-body"><div class="empty-state">No alerts.</div></div></div>':`
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${[...S.alerts].reverse().map(a=>{
+        const emp=empById(a.empId);
+        return `<div style="background:${a.read?'var(--surface)':'#2a1a0a'};border:1px solid ${a.read?'var(--border)':'#5a3010'};border-radius:8px;padding:14px 16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div class="avatar avatar-sm" style="color:${roleColor(emp?.role||'')}">${initials(emp?.name||'?')}</div>
+            <div style="flex:1"><div style="font-size:13px">${emp?.name||'?'}</div><div style="font-size:10px;color:var(--muted)">${a.date}</div></div>
+            ${!a.read?'<span class="badge badge-gold">New</span>':''}
+            <button class="btn btn-ghost btn-sm" onclick="dismissAlert(${a.id})">Dismiss</button>
+          </div>
+          <div style="font-size:12px;color:#e8c080;background:#1a1000;border-radius:5px;padding:10px">${a.message}</div>
+        </div>`;
+      }).join('')}
+    </div>`}`;
+  return div;
+}
+
+function buildEmployeeView(){
+  const div=document.createElement('div');
+  if(!S.currentUser){
+    div.innerHTML=`
+      <div style="max-width:360px;margin:40px auto">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.1em;color:var(--gold);text-align:center;margin-bottom:4px">Clock In / Out</div>
+        <div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:28px;letter-spacing:0.1em;text-transform:uppercase">Select your name</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${S.employees.map(emp=>{
+            const hasPending=S.pendingVerifications.some(v=>v.toEmpId===emp.id&&(v.status==='pending'||v.status==='delayed'));
+            const isIn=S.clockEntries.some(e=>e.empId===emp.id&&!e.clockOut);
+            const rc=roleColor(emp.role);
+            return `<button class="btn btn-ghost" style="justify-content:flex-start;gap:12px;padding:12px 16px;text-align:left" onclick="loginEmployee(${emp.id})">
+              <div class="avatar" style="color:${rc};background:${rc}15;border-color:${rc}30">${initials(emp.name)}</div>
+              <div style="flex:1;text-align:left">
+                <div style="text-transform:none;letter-spacing:0;font-size:13px">${emp.name}</div>
+                <div style="font-size:10px;color:${rc};margin-top:2px">${emp.role}</div>
+              </div>
+              ${isIn?'<span class="badge badge-green">On Clock</span>':''}
+              ${hasPending?'<span class="badge badge-gold">Tip Pending</span>':''}
+              ${emp.chipsOwed>0?`<span class="badge badge-chip">⚫ ${emp.chipsOwed}</span>`:''}
+            </button>`;
+          }).join('')}
+        </div>
+      </div>`;
+    return div;
+  }
+  if(S.activeNav==='emp-chips') return buildEmpChips();
+  if(S.activeNav==='emp-tips') return buildEmpTips();
+  if(S.activeNav==='emp-till') return buildEmpTill();
+  return buildEmpHome();
+}
+
+function buildEmpHome(){
+  const div=document.createElement('div');
+  const emp=empById(S.currentUser);
+  const today=fmtDate(new Date());
+  const todayShifts=(S.schedule[today]||[]).filter(s=>s.empId===S.currentUser);
+  const activeEntry=S.clockEntries.find(e=>e.empId===S.currentUser&&!e.clockOut);
+  const pendingVer=S.pendingVerifications.filter(v=>v.toEmpId===S.currentUser&&(v.status==='pending'||v.status==='delayed'));
+  const canTipOut=['Closing Bartender','Open Bartender','Cocktail Server'].includes(emp.role);
+  let html=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold)">Welcome, ${emp.name.split(' ')[0]}</div>
+      <button class="btn btn-ghost btn-sm" onclick="logoutEmployee()">← Switch User</button>
+    </div>`;
+  if(pendingVer.length>0){
+    html+=`<div class="pending-banner">
+      <div style="font-size:12px;color:var(--gold);margin-bottom:10px;font-weight:500">⚠ Pending Tip Verification (${pendingVer.length})</div>
+      ${pendingVer.map(v=>`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:10px;background:var(--surface);border-radius:6px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px">
+          <div style="font-size:12px">Tip from <strong>${empById(v.fromEmpId)?.name||'?'}</strong></div>
+          <div style="font-size:14px;color:var(--gold)">$${v.amount.toFixed(2)} · ${v.date}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-green btn-sm" onclick="verifyTip(${v.id})">✓ Got It</button>
+          <button class="btn btn-danger btn-sm" onclick="openModal({type:'dispute',verifyId:${v.id}})">✕ Didn't Get It</button>
+          <button class="btn btn-ghost btn-sm" onclick="delayTip(${v.id})">Later</button>
+        </div>
+      </div>`).join('')}
+    </div>`;
+  }
+  html+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    <div class="card">
+      <div class="card-header"><div class="card-title">Today's Shift</div></div>
+      <div class="card-body">
+        ${todayShifts.length?todayShifts.map(s=>`<div style="padding:10px;background:var(--surface2);border-radius:6px;border-left:3px solid ${roleColor(s.role)}">
+          <div style="color:${roleColor(s.role)};font-size:12px">${s.role}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${s.startTime||'Open'} – ${s.endTime||'Close'}</div>
+        </div>`).join(''):'<div style="color:var(--muted);font-size:12px">No shift scheduled today</div>'}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Clock Status</div></div>
+      <div class="card-body">
+        ${activeEntry
+          ?`<div style="color:var(--green);font-size:12px;margin-bottom:10px">🟢 Clocked in ${new Date(activeEntry.clockIn).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+            <button class="btn btn-danger" style="width:100%" onclick="openModal({type:'clock-out'})">Clock Out</button>`
+          :`<div style="color:var(--muted);font-size:12px;margin-bottom:10px">Not clocked in</div>
+            <button class="btn btn-green" style="width:100%" onclick="openModal({type:'clock-in'})">Clock In</button>`}
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:16px">
+    <div class="card-header">
+      <div class="card-title">⚫ Black Chips</div>
+      <button class="btn btn-ghost btn-sm" onclick="setNav('emp-chips')">View All</button>
+    </div>
+    <div class="card-body" style="display:flex;align-items:center;gap:20px">
+      <div class="chip-token" style="width:50px;height:50px;font-size:22px;flex-shrink:0">●</div>
+      <div><div class="chip-count-big">${emp.chipsOwed}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">chips owed to you</div></div>
+      <div style="font-size:12px;color:var(--muted2);flex:1">One chip per shift. Redeem towards food, drinks, or your tab. Collect owed chips from your manager.</div>
+    </div>
+  </div>`;
+  if(canTipOut){
+    html+=`<div class="card">
+      <div class="card-header"><div class="card-title">Tip Out</div><button class="btn btn-gold btn-sm" onclick="openModal({type:'tip-out'})">Allocate Tips</button></div>
+      <div class="card-body"><div style="font-size:12px;color:var(--muted2)">Allocate tip outs to other staff. They will verify receipt at their next login.</div></div>
+    </div>`;
+  }
+  if(emp.hasTill){
+    const today=fmtDate(new Date());
+    const todayOpen=S.tillCounts.find(t=>t.empId===S.currentUser&&t.type==='open'&&t.date===today);
+    const todayClose=S.tillCounts.find(t=>t.empId===S.currentUser&&t.type==='close'&&t.date===today);
+    html+=`<div class="card" style="margin-top:12px">
+      <div class="card-header"><div class="card-title">💵 Till</div><button class="btn btn-ghost btn-sm" onclick="setNav('emp-till')">Full View</button></div>
+      <div class="card-body" style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn ${todayOpen?'btn-ghost':'btn-gold'}" style="flex:1;justify-content:center" onclick="openModal({type:'till-count',countType:'open',empId:${S.currentUser}})">
+          ${todayOpen?'✓ Open Count Done':'💵 Open Till'}
+        </button>
+        <button class="btn ${todayClose?'btn-ghost':todayOpen?'btn-gold':'btn-ghost'}" style="flex:1;justify-content:center" onclick="openModal({type:'till-count',countType:'close',empId:${S.currentUser}})">
+          ${todayClose?'✓ Close Count Done':'🔒 Close Till'}
+        </button>
+      </div>
+    </div>`;
+  }
+  div.innerHTML=html;
+  return div;
+}
+
+function buildEmpChips(){
+  const div=document.createElement('div');
+  const emp=empById(S.currentUser);
+  const myLog=S.chipLog.filter(l=>l.empId===S.currentUser);
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold)">⚫ My Black Chips</div>
+      <button class="btn btn-ghost btn-sm" onclick="logoutEmployee()">← Switch User</button>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-body" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap">
+        <div class="chip-token" style="width:64px;height:64px;font-size:28px;flex-shrink:0">●</div>
+        <div>
+          <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px">Chips Owed to You</div>
+          <div class="chip-count-big" style="font-size:56px">${emp.chipsOwed}</div>
+        </div>
+        <div style="flex:1;min-width:200px;font-size:12px;color:var(--muted2);line-height:1.6">You earn one Black Chip per shift worked. Redeem towards food, drinks, or your tab. See your manager to collect owed chips.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Chip History</div></div>
+      <div class="card-body" style="padding:0">
+        ${myLog.length===0?'<div class="empty-state">No chip activity yet.</div>':`
+        <table><thead><tr><th>Date</th><th>Type</th><th>Change</th><th>Note</th></tr></thead>
+        <tbody>${[...myLog].reverse().map(l=>{
+          const tc={earned:'var(--green)',collected:'var(--blue)',redeemed:'var(--red)',adjustment:'var(--gold)'}[l.type]||'var(--muted)';
+          return `<tr>
+            <td style="color:var(--muted)">${l.date}</td>
+            <td><span class="badge" style="background:${tc}18;color:${tc};border-color:${tc}30">${l.type}</span></td>
+            <td style="color:${l.qty>0?'var(--green)':l.qty<0?'var(--red)':'var(--muted)'}">${l.qty>0?'+':''}${l.qty}</td>
+            <td style="color:var(--muted2);font-size:11px">${l.note||'—'}</td>
+          </tr>`;
+        }).join('')}</tbody></table>`}
+      </div>
+    </div>`;
+  return div;
+}
+
+function buildEmpTips(){
+  const div=document.createElement('div');
+  const myEntries=S.clockEntries.filter(e=>e.empId===S.currentUser&&e.clockOut);
+  const totalCash=myEntries.reduce((a,e)=>a+(e.tipsCash||0),0);
+  const totalCC=myEntries.reduce((a,e)=>a+(e.tipsCC||0),0);
+  div.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.1em;color:var(--gold)">$ My Tips</div>
+      <button class="btn btn-ghost btn-sm" onclick="logoutEmployee()">← Switch User</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+      <div class="card"><div class="card-body" style="text-align:center">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Cash Tips</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--green)">$${totalCash.toFixed(2)}</div>
+      </div></div>
+      <div class="card"><div class="card-body" style="text-align:center">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px">Credit Card Tips</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--blue)">$${totalCC.toFixed(2)}</div>
+      </div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Tip History</div></div>
+      <div class="card-body" style="padding:0">
+        ${myEntries.length===0?'<div class="empty-state">No completed shifts yet.</div>':`
+        <table><thead><tr><th>Date</th><th>Cash</th><th>Credit Card</th><th>Notes</th></tr></thead>
+        <tbody>${[...myEntries].reverse().map(e=>`<tr>
+          <td style="color:var(--muted)">${e.schedDate}</td>
+          <td style="color:var(--green)">$${(e.tipsCash||0).toFixed(2)}</td>
+          <td style="color:var(--blue)">$${(e.tipsCC||0).toFixed(2)}</td>
+          <td style="color:var(--muted2);font-size:11px">${e.notes||'—'}</td>
+        </tr>`).join('')}</tbody></table>`}
+      </div>
+    </div>`;
+  return div;
+}
+
+function buildModal(){
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.onclick=e=>{if(e.target===overlay)closeModal();};
+  const m=S.modal;let html='';
+
+  if(m.type==='data-manage'){
+    const raw=localStorage.getItem(STORAGE_KEY);
+    const sizeKB=raw?Math.round(raw.length/1024*10)/10:0;
+    html=`<div class="modal-header"><div class="modal-title">💾 Data Management</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="info-box">
+        <div style="margin-bottom:6px">Data is saved automatically in this iPad's browser storage.</div>
+        <div style="color:var(--green)">✓ All data saved · ${sizeKB} KB used</div>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:12px">
+        <div style="margin-bottom:4px;color:#e8e2d8">Storage summary</div>
+        <div style="color:var(--muted);display:flex;flex-direction:column;gap:3px">
+          <div>Employees: ${S.employees.length}</div>
+          <div>Scheduled shifts: ${Object.values(S.schedule).flat().length}</div>
+          <div>Clock entries: ${S.clockEntries.length}</div>
+          <div>Chip log entries: ${S.chipLog.length}</div>
+          <div>Till counts: ${S.tillCounts.length}</div>
+          <div>Tip calculations: ${S.tipCalcs.length}</div>
+          <div>Alerts: ${S.alerts.length}</div>
+        </div>
+      </div>
+      <div style="background:#2a1010;border:1px solid var(--red);border-radius:6px;padding:12px">
+        <div style="font-size:12px;color:var(--red);margin-bottom:8px;font-weight:500">⚠ Danger Zone</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Clearing data is permanent and cannot be undone. Export to Excel first if you need a record.</div>
+        <button class="btn btn-danger" style="width:100%;justify-content:center" onclick="confirmClearData()">Clear All Data & Reset App</button>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-gold" onclick="closeModal()">Done</button></div>`;
+  }
+  else if(m.type==='manager-login'){
+    html=`<div class="modal-header"><div class="modal-title">Manager Access</div></div>
+    <div class="modal-body">
+      <div class="info-box">${S.managerPinSet?'Enter your manager PIN to continue.':'Welcome! Default PIN is <strong>0000</strong>. You will be asked to set a new PIN after logging in.'}</div>
+      <div class="form-group"><label class="form-label">Manager PIN</label><input class="form-input" id="mgr-pin" type="password" maxlength="4" placeholder="••••" autocomplete="off"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-gold" onclick="doManagerLogin()">Enter</button></div>`;
+  }
+  else if(m.type==='manager-set-pin'){
+    html=`<div class="modal-header"><div class="modal-title">Set Manager PIN</div></div>
+    <div class="modal-body">
+      <div class="info-box" style="border-color:var(--gold);color:var(--gold)">You are using the default PIN. Please set a new manager PIN now.</div>
+      <div class="form-group"><label class="form-label">New PIN (4 digits)</label><input class="form-input" id="mgr-new1" type="password" maxlength="4" placeholder="••••" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label">Confirm New PIN</label><input class="form-input" id="mgr-new2" type="password" maxlength="4" placeholder="••••" autocomplete="off"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-gold" onclick="doSetManagerPin()">Save PIN</button></div>`;
+  }
+  else if(m.type==='emp-set-pin'){
+    const emp=empById(m.empId);
+    html=`<div class="modal-header"><div class="modal-title">Set Your PIN — ${emp?.name}</div></div>
+    <div class="modal-body">
+      <div class="info-box" style="border-color:var(--gold);color:var(--gold)">Welcome! Please set a personal PIN. You won't be able to change this later — only your manager can update it.</div>
+      <div class="form-group"><label class="form-label">New PIN (4 digits)</label><input class="form-input" id="emp-new1" type="password" maxlength="4" placeholder="••••" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label">Confirm PIN</label><input class="form-input" id="emp-new2" type="password" maxlength="4" placeholder="••••" autocomplete="off"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-gold" onclick="doSetEmpPin(${m.empId})">Save My PIN</button></div>`;
+  }
+  else if(m.type==='change-emp-pin'){
+    const emp=empById(m.empId);
+    html=`<div class="modal-header"><div class="modal-title">Change PIN — ${emp?.name}</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="info-box">Set a new PIN for this employee. They will use it on their next login.</div>
+      <div class="form-group"><label class="form-label">New PIN (4 digits)</label><input class="form-input" id="cp-new1" type="password" maxlength="4" placeholder="••••" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label">Confirm PIN</label><input class="form-input" id="cp-new2" type="password" maxlength="4" placeholder="••••" autocomplete="off"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-gold" onclick="doChangeEmpPin(${m.empId})">Save PIN</button></div>`;
+  }
+  else if(m.type==='manager-change-pin'){
+    html=`<div class="modal-header"><div class="modal-title">Change Manager PIN</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Current PIN</label><input class="form-input" id="mcp-cur" type="password" maxlength="4" placeholder="••••" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label">New PIN (4 digits)</label><input class="form-input" id="mcp-new1" type="password" maxlength="4" placeholder="••••" autocomplete="off"></div>
+      <div class="form-group"><label class="form-label">Confirm New PIN</label><input class="form-input" id="mcp-new2" type="password" maxlength="4" placeholder="••••" autocomplete="off"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-gold" onclick="doChangeManagerPin()">Save</button></div>`;
+  }
+  else if(m.type==='add-shift'||m.type==='edit-shift'){
+    const s=m.type==='edit-shift'?(S.schedule[m.date]||[]).find(x=>x.id===m.shiftId)||{}:{};
+    html=`<div class="modal-header"><div class="modal-title">${m.type==='add-shift'?'Add Shift':'Edit Shift'}</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Date</label><input class="form-input" type="date" id="s-date" value="${m.date||fmtDate(new Date())}"></div>
+      <div class="form-group"><label class="form-label">Employee</label><select class="form-select" id="s-emp"><option value="">Unassigned</option>${S.employees.map(e=>`<option value="${e.id}" ${s.empId===e.id?'selected':''}>${e.name}</option>`).join('')}</select></div>
+      <div class="form-group"><label class="form-label">Role / Shift Type</label><select class="form-select" id="s-role">${ROLES.map(r=>`<option value="${r.label}" ${s.role===r.label?'selected':''}>${r.label}</option>`).join('')}</select></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Start</label><input class="form-input" type="time" id="s-start" value="${s.startTime||''}"></div>
+        <div class="form-group"><label class="form-label">End</label><input class="form-input" type="time" id="s-end" value="${s.endTime||''}"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      ${m.type==='edit-shift'?`<button class="btn btn-danger" onclick="deleteShift('${m.date}',${m.shiftId})">Delete</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveShift()">Save</button>
+    </div>`;
+  }
+  else if(m.type==='add-emp'||m.type==='edit-emp'){
+    const emp=m.type==='edit-emp'?empById(m.empId):{};
+    html=`<div class="modal-header"><div class="modal-title">${m.type==='add-emp'?'Add Employee':'Edit Employee'}</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="e-name" value="${emp?.name||''}" placeholder="First Last"></div>
+      <div class="form-group"><label class="form-label">Primary Role</label><select class="form-select" id="e-role">${ROLES.map(r=>`<option value="${r.label}" ${emp?.role===r.label?'selected':''}>${r.label}</option>`).join('')}</select></div>
+      ${m.type==='add-emp'?`<div class="form-group"><label class="form-label">Temporary PIN (4 digits)</label><input class="form-input" id="e-pin" type="password" maxlength="4" placeholder="Employee will change on first login" autocomplete="off"></div><div class="info-box" style="font-size:11px">Employee will be required to set a new personal PIN on their first login.</div>`:''}
+      <div class="form-group"><label class="form-label" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="e-hastill" ${emp?.hasTill?'checked':''} style="width:auto"> Has Till</label></div>
+      <div class="form-group" id="bank-grp"><label class="form-label">Starting Bank ($)</label><input class="form-input" id="e-bank" type="number" min="0" step="0.01" value="${emp?.bank||0}"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-gold" onclick="saveEmployee()">Save</button></div>`;
+  }
+  else if(m.type==='bank-setup'){
+    const emp=empById(m.empId);
+    html=`<div class="modal-header"><div class="modal-title">Set Bank — ${emp?.name}</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="bk-hastill" ${emp?.hasTill?'checked':''} style="width:auto"> Till Active</label></div>
+      <div class="form-group"><label class="form-label">Starting Bank ($)</label><input class="form-input" id="bk-amount" type="number" min="0" step="0.01" value="${emp?.bank||0}"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-gold" onclick="saveBank(${m.empId})">Save</button></div>`;
+  }
+  else if(m.type==='chip-adjust'){
+    const emp=empById(m.empId);
+    html=`<div class="modal-header"><div class="modal-title">Adjust Chips — ${emp?.name}</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div style="text-align:center;margin-bottom:8px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px">Current Balance</div>
+        <div class="chip-count-big" style="font-size:48px">${emp?.chipsOwed}</div>
+      </div>
+      <div class="form-group"><label class="form-label">New Chip Balance</label><input class="form-input" id="ca-count" type="number" min="0" step="1" value="${emp?.chipsOwed||0}"></div>
+      <div class="form-group"><label class="form-label">Reason / Note</label><input class="form-input" id="ca-note" placeholder="e.g. Redeemed 2 chips at bar..."></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-gold" onclick="saveChipAdjust(${m.empId})">Save</button></div>`;
+  }
+  else if(m.type==='clock-in'){
+    const today=fmtDate(new Date()),todayShifts=(S.schedule[today]||[]).filter(s=>s.empId===S.currentUser);
+    html=`<div class="modal-header"><div class="modal-title">Clock In</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      ${todayShifts.length>0?`
+      <div class="form-group"><label class="form-label">Select Shift</label>
+        <select class="form-select" id="ci-shift" onchange="toggleUnschedRole()">
+          ${todayShifts.map(s=>`<option value="${s.id}">${s.role}${s.startTime?' · '+s.startTime:''}</option>`).join('')}
+          <option value="unscheduled">Unscheduled Shift</option>
+        </select>
+      </div>
+      <div id="unsched-role-group" style="display:none">
+        <div class="form-group"><label class="form-label">Select Your Role for This Shift</label>
+          <select class="form-select" id="ci-unsched-role">
+            ${ROLES.filter(r=>r.id!=='unscheduled').map(r=>`<option value="${r.label}">${r.label}</option>`).join('')}
+          </select>
+        </div>
+      </div>`
+      :`<div class="info-box" style="margin-bottom:4px">No scheduled shift found today.</div>
+      <div class="form-group"><label class="form-label">Select Your Role for This Shift</label>
+        <select class="form-select" id="ci-unsched-role">
+          ${ROLES.filter(r=>r.id!=='unscheduled').map(r=>`<option value="${r.label}">${r.label}</option>`).join('')}
+        </select>
+      </div>`}
+      <div class="form-group"><label class="form-label">PIN</label><input class="form-input" id="ci-pin" type="password" maxlength="4" placeholder="Enter your PIN" autocomplete="off"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-green" onclick="doClockIn()">Clock In</button></div>`;
+  }
+  else if(m.type==='clock-out'){
+    const emp=empById(S.currentUser);
+    const isBartender=TIP_EARN_ROLES.includes(emp?.role)||['Opening Bartender','Closing Bartender'].includes(emp?.shiftRole);
+    const today=fmtDate(new Date());
+    const alreadyRan=S.tipCalcs.some(t=>t.bartenderId===S.currentUser&&t.date===today);
+    html=`<div class="modal-header"><div class="modal-title">Clock Out</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="info-box">Enter your tips for this shift. Enter 0 if none.</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Cash Tips ($)</label><input class="form-input" id="co-cash" type="number" min="0" step="0.01" placeholder="0.00"></div>
+        <div class="form-group"><label class="form-label">CC Tips ($)</label><input class="form-input" id="co-cc" type="number" min="0" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Shift Notes (optional)</label><input class="form-input" id="co-notes" placeholder="Any notes..."></div>
+      ${isBartender?`
+      <div style="border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-size:12px;color:var(--gold);font-weight:500;margin-bottom:6px">💰 Tip Calculator</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">As the bartender on shift, you are responsible for calculating and distributing tips before clocking out.</div>
+        ${alreadyRan
+          ?`<div style="background:#102a18;border:1px solid var(--green);border-radius:6px;padding:10px;font-size:12px;color:var(--green)">✓ Tip calc already run for today's shift.</div>`
+          :`<button class="btn btn-gold" style="width:100%;justify-content:center" onclick="closeModal();openModal({type:'tip-calc-step1'})">Run Tip Calculator →</button>
+          <div style="font-size:11px;color:var(--muted2);margin-top:6px;text-align:center">Complete this before clocking out</div>`
+        }
+      </div>`:''}
+      <div style="border-top:1px solid var(--border);padding-top:14px">
+        <div style="font-size:12px;color:var(--gold);font-weight:500;margin-bottom:6px">⚫ Black Chip</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Did you collect your Black Chip for this shift?</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" id="chip-yes-btn" onclick="setChipChoice(true)" style="flex:1;justify-content:center">✓ Yes, I got it</button>
+          <button class="btn btn-ghost" id="chip-no-btn" onclick="setChipChoice(false)" style="flex:1;justify-content:center">✕ Not yet</button>
+        </div>
+        <div id="chip-msg" style="font-size:11px;color:var(--muted);margin-top:6px;text-align:center;min-height:16px"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-gold" onclick="doClockOut()">Clock Out</button></div>`;
+  }
+  else if(m.type==='tip-out'){
+    const others=S.employees.filter(e=>e.id!==S.currentUser);
+    html=`<div class="modal-header"><div class="modal-title">Tip Out</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="info-box">Enter amounts to tip out. Leave blank or 0 to skip.</div>
+      ${others.map(e=>`<div style="display:flex;align-items:center;gap:10px">
+        <div class="avatar avatar-sm" style="color:${roleColor(e.role)}">${initials(e.name)}</div>
+        <div style="flex:1;font-size:12px">${e.name} <span style="color:${roleColor(e.role)};font-size:10px">${e.role}</span></div>
+        <div style="width:110px"><input class="form-input" type="number" min="0" step="0.01" placeholder="$0.00" id="to-${e.id}" style="padding:6px 8px"></div>
+      </div>`).join('')}
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-gold" onclick="saveTipOut()">Send Tip Out</button></div>`;
+  }
+  else if(m.type==='till-count'){
+    const emp=empById(m.empId);
+    const isClose=m.countType==='close';
+    const today=fmtDate(new Date());
+    const openCount=S.tillCounts.find(t=>t.empId===m.empId&&t.type==='open'&&t.date===today);
+    html=`<div class="modal-header">
+      <div class="modal-title">${isClose?'Closing':'Opening'} Till Count — ${emp?.name}</div>
+      <button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box" style="margin-bottom:4px">
+        ${isClose
+          ?`Count every denomination in your drawer. The system will calculate your cash sales and compare to your POS total.`
+          :`Count every denomination in your drawer and verify your starting bank of <strong style="color:var(--gold)">$${emp?.bank?.toFixed(2)||'0.00'}</strong>.`
+        }
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${DENOMS.map(d=>`
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px">
+          <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:4px">${d.label}</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <input class="form-input" type="number" min="0" step="1" placeholder="0" id="till-${d.key}" oninput="updateTillTotal()" style="padding:6px 8px;flex:1">
+            <div style="font-size:11px;color:var(--muted2);white-space:nowrap">× $${d.value%1===0?d.value:d.value.toFixed(2)}</div>
+          </div>
+          <div style="font-size:11px;color:var(--gold);margin-top:4px" id="sub-${d.key}">$0.00</div>
+        </div>`).join('')}
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--gold);border-radius:8px;padding:14px;margin-top:4px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px;color:var(--muted)">Drawer Total</span>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--gold)" id="till-total">$0.00</span>
+        </div>
+        ${isClose?`
+        <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--muted)">Leave Bank in Drawer</span>
+            <span style="color:var(--gold)">$${emp?.bank?.toFixed(2)||'0.00'}</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:12px;color:var(--muted)">Your Cash Sales (Total − Bank)</span>
+            <span style="color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:20px" id="till-sales">$0.00</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">POS Cash Sales Total</label>
+            <input class="form-input" type="number" min="0" step="0.01" placeholder="Enter from Square/POS..." id="till-pos" oninput="updateTillVariance()">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+            <span style="font-size:12px;color:var(--muted)">Variance (Your Count vs POS)</span>
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:20px" id="till-variance" style="color:var(--muted)">—</span>
+          </div>
+          <div style="margin-top:12px;padding:10px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)">
+            <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer">
+              <input type="checkbox" id="till-bank-confirm" style="width:auto">
+              <span>I confirm that <strong style="color:var(--gold)">$${emp?.bank?.toFixed(2)||'0.00'}</strong> has been left in the drawer as the starting bank</span>
+            </label>
+          </div>
+        </div>`:`
+        <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:12px;color:var(--muted)">Expected Bank</span>
+            <span style="color:var(--gold)">$${emp?.bank?.toFixed(2)||'0.00'}</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <span style="font-size:12px;color:var(--muted)">Bank Variance</span>
+            <span id="till-bank-var" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted)">—</span>
+          </div>
+        </div>`}
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-gold" onclick="saveTillCount('${m.countType}',${m.empId})">Save Count</button>
+    </div>`;
+  }
+  else if(m.type==='tip-calc-step1'){
+    // Step 1: Food sales entry + kitchen hours review/adjust
+    const today=fmtDate(new Date());
+    const kitchenStaff=S.clockEntries.filter(e=>{
+      const emp=empById(e.empId);
+      return e.schedDate===today&&KITCHEN_ROLES.includes(emp?.role||emp?.shiftRole)&&e.clockIn;
+    });
+    html=`<div class="modal-header"><div class="modal-title">💰 Tip Calc — Step 1 of 3</div></div>
+    <div class="modal-body">
+      <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">Kitchen Tip Pool</div>
+      <div class="form-group">
+        <label class="form-label">Total Food Sales ($)</label>
+        <input class="form-input" id="tc-food" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateKitchenPool()">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px;margin-top:4px">
+        <span style="font-size:12px;color:var(--muted)">Kitchen Pool (10%)</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--gold)" id="tc-kpool">$0.00</span>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">Kitchen Staff Hours <span style="color:var(--muted2)">(adjust if needed)</span></div>
+        ${kitchenStaff.length===0
+          ?'<div style="color:var(--muted2);font-size:12px">No kitchen staff clocked in today.</div>'
+          :kitchenStaff.map(e=>{
+            const emp=empById(e.empId);
+            const hrs=e.clockOut?((e.clockOut-e.clockIn)/3600000).toFixed(2):((Date.now()-e.clockIn)/3600000).toFixed(2);
+            return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div class="avatar avatar-sm" style="color:#e07a3a;background:#e07a3a18">${initials(emp?.name||'?')}</div>
+              <div style="flex:1;font-size:12px">${emp?.name||'?'}</div>
+              <div style="width:90px">
+                <input class="form-input" type="number" min="0" step="0.25" value="${hrs}" id="kh-${e.empId}" oninput="updateKitchenPool()" style="padding:6px 8px;text-align:right">
+              </div>
+              <span style="font-size:11px;color:var(--muted)">hrs</span>
+            </div>`;
+          }).join('')
+        }
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="openModal({type:'clock-out'})">← Back</button>
+      <button class="btn btn-gold" onclick="goTipStep2()">Next: Allocate Kitchen Tips →</button>
+    </div>`;
+  }
+  else if(m.type==='tip-calc-step2'){
+    const alloc=_tipState.kitchenAllocations||[];
+    const pool=_tipState.kitchenPool||0;
+    html=`<div class="modal-header"><div class="modal-title">💰 Tip Calc — Step 2 of 3</div></div>
+    <div class="modal-body">
+      <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">Kitchen Tip Distribution</div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--muted)">Kitchen Pool</span>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--gold)">$${pool.toFixed(2)}</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Staple these amounts to a card with each employee's name:</div>
+      ${alloc.map(a=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatar avatar-sm" style="color:#e07a3a;background:#e07a3a18">${initials(a.name)}</div>
+          <div>
+            <div style="font-size:13px">${a.name}</div>
+            <div style="font-size:11px;color:var(--muted)">${a.hours} hrs × $${a.rate.toFixed(2)}/hr</div>
+          </div>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--green)">$${a.amount.toFixed(2)}</div>
+      </div>`).join('')}
+      ${alloc.length===0?'<div style="color:var(--muted2);font-size:12px">No kitchen staff hours entered.</div>':''}
+      <div style="background:#102a18;border:1px solid var(--green);border-radius:6px;padding:10px;font-size:12px;color:var(--green);margin-top:4px">
+        ✓ Once you have prepared the cash envelopes/cards, tap Next to continue to server & bar tips.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="openModal({type:'tip-calc-step1'})">← Back</button>
+      <button class="btn btn-gold" onclick="goTipStep3()">Next: Server & Bar Tips →</button>
+    </div>`;
+  }
+  else if(m.type==='tip-calc-step3'){
+    const today=fmtDate(new Date());
+    const kitchenPool=_tipState.kitchenPool||0;
+    const tipStaff=S.clockEntries.filter(e=>{
+      const emp=empById(e.empId);
+      const role=emp?.role||e.shiftRole||'';
+      return e.schedDate===today&&TIP_EARN_ROLES.includes(role)&&e.clockIn&&e.empId!==S.currentUser;
+    });
+    const currentEmp=empById(S.currentUser);
+    html=`<div class="modal-header"><div class="modal-title">💰 Tip Calc — Step 3 of 3</div></div>
+    <div class="modal-body">
+      <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px">Server & Bar Tips</div>
+      <div class="form-group">
+        <label class="form-label">Total Tips Collected This Shift ($)</label>
+        <input class="form-input" id="tc-total" type="number" min="0" step="0.01" placeholder="0.00" oninput="updateServerPool()">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px;margin-top:4px">
+        <div>
+          <div style="font-size:11px;color:var(--muted)">Kitchen Pool deducted</div>
+          <div style="font-size:12px;color:var(--red)">−$${kitchenPool.toFixed(2)}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--muted)">Remaining for Server/Bar</div>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--gold)" id="tc-spool">$0.00</span>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">Tip-Earning Hours Per Staff</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div class="avatar avatar-sm" style="color:${roleColor(currentEmp?.role||'')}">${initials(currentEmp?.name||'?')}</div>
+          <div style="flex:1;font-size:12px">${currentEmp?.name||'You'} <span style="color:var(--gold);font-size:10px">You</span></div>
+          <div style="width:90px"><input class="form-input" type="number" min="0" step="0.25" placeholder="0" id="sh-${S.currentUser}" oninput="updateServerPool()" style="padding:6px 8px;text-align:right"></div>
+          <span style="font-size:11px;color:var(--muted)">hrs</span>
+        </div>
+        ${tipStaff.map(e=>{
+          const emp=empById(e.empId);
+          return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div class="avatar avatar-sm" style="color:${roleColor(emp?.role||'')}">${initials(emp?.name||'?')}</div>
+            <div style="flex:1;font-size:12px">${emp?.name||'?'}</div>
+            <div style="width:90px"><input class="form-input" type="number" min="0" step="0.25" placeholder="0" id="sh-${e.empId}" oninput="updateServerPool()" style="padding:6px 8px;text-align:right"></div>
+            <span style="font-size:11px;color:var(--muted)">hrs</span>
+          </div>`;
+        }).join('')}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+          <span style="font-size:12px;color:var(--muted)">Hourly Tip Rate</span>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--blue)" id="tc-srate">$0.00/hr</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="goTipStep2Back()">← Back</button>
+      <button class="btn btn-gold" onclick="goTipSummary()">View Summary →</button>
+    </div>`;
+  }
+  else if(m.type==='tip-calc-summary'){
+    const alloc=_tipState.serverAllocations||[];
+    const kitchenAlloc=_tipState.kitchenAllocations||[];
+    html=`<div class="modal-header"><div class="modal-title">💰 Tip Distribution Summary</div></div>
+    <div class="modal-body">
+      <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">Kitchen</div>
+      ${kitchenAlloc.map(a=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatar avatar-sm" style="color:#e07a3a;background:#e07a3a18">${initials(a.name)}</div>
+          <span style="font-size:12px">${a.name}</span>
+        </div>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--green)">$${a.amount.toFixed(2)}</span>
+      </div>`).join('')}
+      <div style="font-size:11px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin:12px 0 8px">Server & Bar</div>
+      ${alloc.map(a=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="avatar avatar-sm" style="color:${roleColor(empById(a.empId)?.role||'')};">${initials(a.name)}</div>
+          <div>
+            <div style="font-size:12px">${a.name}</div>
+            <div style="font-size:10px;color:var(--muted)">${a.hours} hrs × $${a.rate.toFixed(2)}/hr</div>
+          </div>
+        </div>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--blue)">$${a.amount.toFixed(2)}</span>
+      </div>`).join('')}
+      <div style="background:#2a2010;border:1px solid var(--gold);border-radius:6px;padding:12px;margin-top:8px;font-size:12px;color:var(--gold)">
+        ✓ Prepare cash envelopes or staple to name cards. Tap "Done & Save" when tips are distributed.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="goTipSummaryBack()">← Back</button>
+      <button class="btn btn-gold" onclick="saveTipCalc()">Done & Save →</button>
+    </div>`;
+  }
+  else if(m.type==='dispute'){
+    const v=S.pendingVerifications.find(x=>x.id===m.verifyId);
+    html=`<div class="modal-header"><div class="modal-title">Alert Manager</div><button class="btn btn-ghost btn-icon" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div style="background:#2a1010;border:1px solid var(--red);border-radius:6px;padding:12px;font-size:12px">Reporting missing tip out of <strong style="color:var(--gold)">$${v?.amount?.toFixed(2)}</strong> from ${empById(v?.fromEmpId)?.name||'?'}.</div>
+      <div class="form-group"><label class="form-label">Message to Manager</label><textarea class="form-input" id="dis-msg" rows="3">${`I did not receive my tip out of $${v?.amount?.toFixed(2)} from ${empById(v?.fromEmpId)?.name}.`}</textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-danger" onclick="sendDispute(${m.verifyId})">Send Alert</button></div>`;
+  }
+
+  overlay.innerHTML=`<div class="modal">${html}</div>`;
+  return overlay;
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────
+function doManagerLogin(){
+  const pin=document.getElementById('mgr-pin')?.value;
+  if(pin!==S.managerPin){showToast('Incorrect PIN');return;}
+  S.managerAuthed=true;
+  if(!S.managerPinSet){
+    S.modal={type:'manager-set-pin'};render();return;
+  }
+  S.modal=null;S.mode='manager';S.activeNav='schedule';render();
+}
+function doSetManagerPin(){
+  const p1=document.getElementById('mgr-new1')?.value;
+  const p2=document.getElementById('mgr-new2')?.value;
+  if(!p1||p1.length<4){alert('PIN must be 4 digits');return;}
+  if(p1!==p2){alert('PINs do not match');return;}
+  S.managerPin=p1;S.managerPinSet=true;
+  S.modal=null;S.mode='manager';S.activeNav='schedule';
+  showToast('Manager PIN set!');
+}
+function doChangeManagerPin(){
+  const cur=document.getElementById('mcp-cur')?.value;
+  const p1=document.getElementById('mcp-new1')?.value;
+  const p2=document.getElementById('mcp-new2')?.value;
+  if(cur!==S.managerPin){alert('Current PIN incorrect');return;}
+  if(!p1||p1.length<4){alert('PIN must be 4 digits');return;}
+  if(p1!==p2){alert('PINs do not match');return;}
+  S.managerPin=p1;closeModal();showToast('Manager PIN updated!');
+}
+function doSetEmpPin(empId){
+  const p1=document.getElementById('emp-new1')?.value;
+  const p2=document.getElementById('emp-new2')?.value;
+  if(!p1||p1.length<4){alert('PIN must be 4 digits');return;}
+  if(p1!==p2){alert('PINs do not match');return;}
+  const i=S.employees.findIndex(e=>e.id===empId);
+  if(i>=0){S.employees[i].pin=p1;S.employees[i].mustSetPin=false;}
+  S.currentUser=empId;S.activeNav='emp-home';
+  closeModal();showToast('PIN set! Welcome.');
+}
+function doChangeEmpPin(empId){
+  const p1=document.getElementById('cp-new1')?.value;
+  const p2=document.getElementById('cp-new2')?.value;
+  if(!p1||p1.length<4){alert('PIN must be 4 digits');return;}
+  if(p1!==p2){alert('PINs do not match');return;}
+  const i=S.employees.findIndex(e=>e.id===empId);
+  if(i>=0){S.employees[i].pin=p1;S.employees[i].mustSetPin=true;}
+  closeModal();showToast('Employee PIN updated. They will set a new PIN on next login.');
+}
+function doManagerLogout(){S.managerAuthed=false;S.mode='employee';S.currentUser=null;S.activeNav='emp-home';render();}
+function setMode(m){
+  if(m==='manager'){
+    if(!S.managerAuthed){S.modal={type:'manager-login'};render();return;}
+    S.mode='manager';S.activeNav='schedule';render();
+  } else {
+    if(S.managerAuthed){doManagerLogout();}
+    else{S.mode='employee';S.currentUser=null;S.activeNav='emp-home';render();}
+  }
+}
+function setNav(n){S.activeNav=n;render();}
+function openModal(obj){S.modal=obj;render();}
+function prevWeek(){S.weekStart=addDays(S.weekStart,-7);render();}
+function nextWeek(){S.weekStart=addDays(S.weekStart,7);render();}
+function todayWeek(){S.weekStart=getMonday(new Date());render();}
+
+function saveShift(){
+  const date=document.getElementById('s-date').value;
+  const empId=parseInt(document.getElementById('s-emp').value)||null;
+  const role=document.getElementById('s-role').value;
+  const startTime=document.getElementById('s-start').value;
+  const endTime=document.getElementById('s-end').value;
+  if(!date||!role)return;
+  if(!S.schedule[date])S.schedule[date]=[];
+  if(S.modal.type==='edit-shift'){
+    const i=S.schedule[date].findIndex(s=>s.id===S.modal.shiftId);
+    if(i>=0)S.schedule[date][i]={...S.schedule[date][i],empId,role,startTime,endTime};
+  } else {
+    S.schedule[date].push({id:nid('shift'),empId,role,startTime,endTime});
+  }
+  closeModal();showToast('Shift saved!');
+}
+function deleteShift(date,shiftId){S.schedule[date]=(S.schedule[date]||[]).filter(s=>s.id!==shiftId);closeModal();showToast('Shift removed.');}
+function saveEmployee(){
+  const name=document.getElementById('e-name').value.trim();
+  const role=document.getElementById('e-role').value;
+  const pin=document.getElementById('e-pin').value;
+  const hasTill=document.getElementById('e-hastill').checked;
+  const bank=parseFloat(document.getElementById('e-bank').value)||0;
+  if(!name)return;
+  if(S.modal.type==='edit-emp'){
+    const i=S.employees.findIndex(e=>e.id===S.modal.empId);
+    if(i>=0)S.employees[i]={...S.employees[i],name,role,pin,hasTill,bank};
+  } else {
+    S.employees.push({id:Date.now(),name,role,pin,hasTill,bank,chipsOwed:0,mustSetPin:true});
+  }
+  closeModal();showToast('Saved!');
+}
+function removeEmp(id){if(!confirm('Remove employee?'))return;S.employees=S.employees.filter(e=>e.id!==id);render();}
+function saveBank(empId){
+  const hasTill=document.getElementById('bk-hastill').checked;
+  const bank=parseFloat(document.getElementById('bk-amount').value)||0;
+  const i=S.employees.findIndex(e=>e.id===empId);
+  if(i>=0)S.employees[i]={...S.employees[i],hasTill,bank};
+  closeModal();showToast('Bank updated!');
+}
+function quickChip(empId,delta){
+  const i=S.employees.findIndex(e=>e.id===empId);if(i<0)return;
+  const prev=S.employees[i].chipsOwed,next=Math.max(0,prev+delta);
+  S.employees[i].chipsOwed=next;
+  S.chipLog.push({id:nid('chip'),empId,date:fmtDate(new Date()),type:'adjustment',qty:next-prev,note:'Manager quick adjust'});
+  saveState();render();
+}
+function saveChipAdjust(empId){
+  const newCount=parseInt(document.getElementById('ca-count').value)||0;
+  const note=document.getElementById('ca-note').value.trim()||'Manager adjustment';
+  const i=S.employees.findIndex(e=>e.id===empId);if(i<0)return;
+  const diff=newCount-S.employees[i].chipsOwed;
+  S.employees[i].chipsOwed=newCount;
+  S.chipLog.push({id:nid('chip'),empId,date:fmtDate(new Date()),type:'adjustment',qty:diff,note});
+  closeModal();showToast('Chip balance updated!');
+}
+function loginEmployee(id){
+  const emp=empById(id);
+  if(emp?.mustSetPin){S.modal={type:'emp-set-pin',empId:id};render();return;}
+  S.currentUser=id;S.activeNav='emp-home';render();
+}
+function logoutEmployee(){S.currentUser=null;S.activeNav='emp-home';render();}
+
+let _chipChoice=null;
+function setChipChoice(val){
+  _chipChoice=val;
+  const msg=document.getElementById('chip-msg');
+  const yb=document.getElementById('chip-yes-btn');
+  const nb=document.getElementById('chip-no-btn');
+  if(msg)msg.textContent=val?'Chip collected — no change to your balance':'Chip will be added to your owed balance (+1)';
+  if(yb)yb.style.borderColor=val?'var(--green)':'var(--border)';
+  if(nb)nb.style.borderColor=!val?'var(--red)':'var(--border)';
+}
+function doClockIn(){
+  const pin=document.getElementById('ci-pin')?.value;
+  const emp=empById(S.currentUser);
+  if(pin!==emp?.pin){alert('Incorrect PIN');return;}
+  const shiftEl=document.getElementById('ci-shift');
+  const shiftVal=shiftEl?shiftEl.value:null;
+  const isUnscheduled=!shiftVal||shiftVal==='unscheduled';
+  const shiftId=isUnscheduled?null:parseInt(shiftVal)||null;
+  const unschedRoleEl=document.getElementById('ci-unsched-role');
+  const shiftRole=isUnscheduled&&unschedRoleEl?unschedRoleEl.value:(shiftId?(S.schedule[fmtDate(new Date())]||[]).find(s=>s.id===shiftId)?.role||null:null);
+  const today=fmtDate(new Date());
+  S.clockEntries.push({id:nid('entry'),empId:S.currentUser,shiftId,shiftRole,schedDate:today,clockIn:Date.now(),clockOut:null,tipsCash:0,tipsCC:0,notes:'',tipOuts:[],chipCollected:null});
+  closeModal();showToast('Clocked in!');
+}
+function doClockOut(){
+  if(_chipChoice===null){alert('Please select whether you collected your chip.');return;}
+  const tipsCash=parseFloat(document.getElementById('co-cash')?.value)||0;
+  const tipsCC=parseFloat(document.getElementById('co-cc')?.value)||0;
+  const notes=document.getElementById('co-notes')?.value||'';
+  const i=S.clockEntries.findIndex(e=>e.empId===S.currentUser&&!e.clockOut);
+  if(i>=0){Object.assign(S.clockEntries[i],{clockOut:Date.now(),tipsCash,tipsCC,notes,chipCollected:_chipChoice});}
+  const ei=S.employees.findIndex(e=>e.id===S.currentUser);
+  const today=fmtDate(new Date());
+  if(_chipChoice){
+    S.chipLog.push({id:nid('chip'),empId:S.currentUser,date:today,type:'collected',qty:0,note:'Collected at end of shift'});
+  } else {
+    S.employees[ei].chipsOwed+=1;
+    S.chipLog.push({id:nid('chip'),empId:S.currentUser,date:today,type:'earned',qty:1,note:'Chip not collected — added to balance'});
+  }
+  _chipChoice=null;
+  closeModal();showToast('Clocked out! Tips & chip recorded.');
+}
+function saveTipOut(){
+  const others=S.employees.filter(e=>e.id!==S.currentUser);
+  const today=fmtDate(new Date());let count=0;
+  others.forEach(e=>{
+    const amt=parseFloat(document.getElementById(`to-${e.id}`)?.value)||0;
+    if(amt>0){S.pendingVerifications.push({id:nid('verify'),fromEmpId:S.currentUser,toEmpId:e.id,amount:amt,date:today,status:'pending'});count++;}
+  });
+  closeModal();showToast(`Tip out sent to ${count} employee${count!==1?'s':''}!`);
+}
+function verifyTip(id){const i=S.pendingVerifications.findIndex(v=>v.id===id);if(i>=0)S.pendingVerifications[i].status='verified';saveState();showToast('Tip verified!');}
+function delayTip(id){const i=S.pendingVerifications.findIndex(v=>v.id===id);if(i>=0)S.pendingVerifications[i].status='delayed';saveState();showToast('Reminder delayed until next login.');}
+function sendDispute(verifyId){
+  const msg=document.getElementById('dis-msg').value.trim();
+  const i=S.pendingVerifications.findIndex(v=>v.id===verifyId);
+  if(i>=0)S.pendingVerifications[i].status='disputed';
+  S.alerts.push({id:nid('alert'),empId:S.currentUser,message:msg,date:fmtDate(new Date()),read:false});
+  closeModal();showToast('Alert sent to manager!');
+}
+function dismissAlert(id){const i=S.alerts.findIndex(a=>a.id===id);if(i>=0)S.alerts[i].read=true;render();}
+function markAllRead(){S.alerts.forEach(a=>a.read=true);render();}
+function toggleUnschedRole(){
+  const sel=document.getElementById('ci-shift');
+  const grp=document.getElementById('unsched-role-group');
+  if(grp) grp.style.display=sel&&sel.value==='unscheduled'?'block':'none';
+}
+function roundToQuarter(n){ return Math.round(n*4)/4; }
+function updateKitchenPool(){
+  const food=parseFloat(document.getElementById('tc-food')?.value)||0;
+  const kpEl=document.getElementById('tc-kpool');
+  if(kpEl) kpEl.textContent='$'+(food*0.10).toFixed(2);
+}
+function updateServerPool(){
+  const kitchenPool=_tipState.kitchenPool||0;
+  const total=parseFloat(document.getElementById('tc-total')?.value)||0;
+  const remaining=Math.max(0,total-kitchenPool);
+  const spEl=document.getElementById('tc-spool');
+  if(spEl) spEl.textContent='$'+remaining.toFixed(2);
+  let totalHrs=0;
+  document.querySelectorAll('[id^="sh-"]').forEach(el=>{ totalHrs+=parseFloat(el.value)||0; });
+  const rate=totalHrs>0?remaining/totalHrs:0;
+  const srEl=document.getElementById('tc-srate');
+  if(srEl) srEl.textContent='$'+rate.toFixed(2)+'/hr';
+}
+// Tip calc state - persists across modal steps
+let _tipState={foodSales:0,kitchenPool:0,kitchenAllocations:[],totalTips:0,remainingTips:0,serverAllocations:[]};
+function goTipStep2(){
+  const food=parseFloat(document.getElementById('tc-food')?.value)||0;
+  const pool=roundToQuarter(food*0.10);
+  const today=fmtDate(new Date());
+  const kitchenEntries=S.clockEntries.filter(e=>{
+    const emp=empById(e.empId);
+    return e.schedDate===today&&KITCHEN_ROLES.includes(emp?.role||emp?.shiftRole||'')&&e.clockIn;
+  });
+  let totalKHrs=0;
+  const allocations=[];
+  kitchenEntries.forEach(e=>{
+    const hrs=parseFloat(document.getElementById('kh-'+e.empId)?.value)||0;
+    totalKHrs+=hrs;
+    allocations.push({empId:e.empId,name:empById(e.empId)?.name||'?',hours:hrs,amount:0,rate:0});
+  });
+  const rate=totalKHrs>0?pool/totalKHrs:0;
+  allocations.forEach(a=>{ a.rate=rate; a.amount=roundToQuarter(a.hours*rate); });
+  _tipState.foodSales=food;
+  _tipState.kitchenPool=pool;
+  _tipState.kitchenAllocations=allocations;
+  S.modal={type:'tip-calc-step2'};
+  render();
+}
+function goTipStep3(){ S.modal={type:'tip-calc-step3'}; render(); }
+function goTipStep2Back(){ S.modal={type:'tip-calc-step2'}; render(); }
+function goTipSummary(){
+  const kitchenPool=_tipState.kitchenPool||0;
+  const total=parseFloat(document.getElementById('tc-total')?.value)||0;
+  const remaining=Math.max(0,total-kitchenPool);
+  const allocations=[];
+  let totalHrs=0;
+  document.querySelectorAll('[id^="sh-"]').forEach(el=>{
+    const empId=parseInt(el.id.replace('sh-',''));
+    const hrs=parseFloat(el.value)||0;
+    if(hrs>0){ allocations.push({empId,name:empById(empId)?.name||'?',hours:hrs,amount:0,rate:0}); totalHrs+=hrs; }
+  });
+  const rate=totalHrs>0?remaining/totalHrs:0;
+  allocations.forEach(a=>{ a.rate=rate; a.amount=roundToQuarter(a.hours*rate); });
+  _tipState.totalTips=total;
+  _tipState.remainingTips=remaining;
+  _tipState.serverAllocations=allocations;
+  S.modal={type:'tip-calc-summary'};
+  render();
+}
+function goTipSummaryBack(){ S.modal={type:'tip-calc-step3'}; render(); }
+function saveTipCalc(){
+  const today=fmtDate(new Date());
+  S.tipCalcs.push({
+    id:nid('tip'),date:today,bartenderId:S.currentUser,
+    foodSales:_tipState.foodSales,kitchenPool:_tipState.kitchenPool,
+    kitchenAllocations:_tipState.kitchenAllocations,
+    totalTips:_tipState.totalTips,remainingTips:_tipState.remainingTips,
+    serverAllocations:_tipState.serverAllocations,
+    createdAt:Date.now()
+  });
+  (_tipState.serverAllocations||[]).forEach(a=>{
+    if(a.empId!==S.currentUser){
+      S.pendingVerifications.push({id:nid('verify'),fromEmpId:S.currentUser,toEmpId:a.empId,amount:a.amount,date:today,status:'pending'});
+    }
+  });
+  _tipState={foodSales:0,kitchenPool:0,kitchenAllocations:[],totalTips:0,remainingTips:0,serverAllocations:[]};
+  saveState();
+  showToast('Tips saved! Complete your clock out.');
+  S.modal={type:'clock-out'};
+  render();
+}
+function updateTillTotal(){
+  DENOMS.forEach(d=>{
+    const qty=parseInt(document.getElementById('till-'+d.key)?.value)||0;
+    const sub=qty*d.value;
+    denoms[d.key]=qty;
+    total+=sub;
+    const subEl=document.getElementById('sub-'+d.key);
+    if(subEl)subEl.textContent='$'+sub.toFixed(2);
+  });
+  const totalEl=document.getElementById('till-total');
+  if(totalEl)totalEl.textContent='$'+total.toFixed(2);
+  const emp=empById(S.modal?.empId);
+  const bank=emp?.bank||0;
+  const salesEl=document.getElementById('till-sales');
+  if(salesEl)salesEl.textContent='$'+(Math.max(0,total-bank)).toFixed(2);
+  const bvEl=document.getElementById('till-bank-var');
+  if(bvEl){const bv=total-bank;bvEl.textContent=(bv>0?'+':'')+'$'+bv.toFixed(2);bvEl.style.color=Math.abs(bv)<0.01?'var(--green)':bv<0?'var(--red)':'var(--gold)';}
+  updateTillVariance();
+}
+function updateTillVariance(){
+  const emp=empById(S.modal?.empId);
+  const bank=emp?.bank||0;
+  let total=0;
+  DENOMS.forEach(d=>{const qty=parseInt(document.getElementById('till-'+d.key)?.value)||0;total+=qty*d.value;});
+  const cashSales=total-bank;
+  const posVal=parseFloat(document.getElementById('till-pos')?.value);
+  const vEl=document.getElementById('till-variance');
+  if(vEl&&!isNaN(posVal)){
+    const v=cashSales-posVal;
+    vEl.textContent=(v>0?'+':'')+'$'+v.toFixed(2);
+    vEl.style.color=Math.abs(v)<0.01?'var(--green)':v<0?'var(--red)':'var(--gold)';
+  }
+}
+function saveTillCount(countType,empId){
+  const emp=empById(empId);
+  if(!emp)return;
+  const bank=emp.bank||0;
+  let total=0;
+  const denoms={};
+  DENOMS.forEach(d=>{const qty=parseInt(document.getElementById('till-'+d.key)?.value)||0;denoms[d.key]=qty;total+=qty*d.value;});
+  const today=fmtDate(new Date());
+  if(countType==='close'){
+    const confirmed=document.getElementById('till-bank-confirm')?.checked;
+    if(!confirmed){alert('Please confirm that the starting bank has been left in the drawer.');return;}
+    const posTotal=parseFloat(document.getElementById('till-pos')?.value)||null;
+    const cashSales=total-bank;
+    const variance=posTotal!=null?cashSales-posTotal:0;
+    S.tillCounts.push({id:nid('till'),empId,type:'close',date:today,denoms,total,bank,posTotal,cashSales,variance,bankConfirmed:true});
+    // Flag to manager if significant variance
+    if(posTotal!=null&&Math.abs(variance)>1){
+      S.alerts.push({id:nid('alert'),empId,message:`Till variance of ${variance>0?'+':''}$${variance.toFixed(2)} on closing count for ${emp.name}. Cash sales counted: $${cashSales.toFixed(2)}, POS reported: $${posTotal.toFixed(2)}.`,date:today,read:false});
+    }
+  } else {
+    const bankVariance=total-bank;
+    S.tillCounts.push({id:nid('till'),empId,type:'open',date:today,denoms,total,bank,posTotal:null,cashSales:null,variance:bankVariance,bankConfirmed:false});
+    if(Math.abs(bankVariance)>0.01){
+      S.alerts.push({id:nid('alert'),empId,message:`Opening count discrepancy for ${emp.name}. Expected bank: $${bank.toFixed(2)}, Actual count: $${total.toFixed(2)}, Difference: ${bankVariance>0?'+':''}$${bankVariance.toFixed(2)}.`,date:today,read:false});
+    }
+  }
+  closeModal();showToast(`${countType==='open'?'Opening':'Closing'} count saved!`);
+}
+function bindEvents(){
+  const tc=document.getElementById('e-hastill');
+  if(tc)tc.addEventListener('change',()=>{const bg=document.getElementById('bank-grp');if(bg)bg.style.opacity=tc.checked?'1':'0.4';});
+}
+
+// ─── LOCALSTORAGE PERSISTENCE ────────────────────────────────
+const STORAGE_KEY='lastcall_payroll_v2';
+
+function confirmClearData(){
+  if(!confirm('Are you absolutely sure? This will erase ALL employees, schedules, clock entries, tips, chips, and till data. This cannot be undone.')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+function saveState(){
+  try{
+    const persisted={
+      managerPin:S.managerPin,
+      managerPinSet:S.managerPinSet,
+      employees:S.employees,
+      schedule:S.schedule,
+      clockEntries:S.clockEntries,
+      pendingVerifications:S.pendingVerifications,
+      alerts:S.alerts,
+      chipLog:S.chipLog,
+      tillCounts:S.tillCounts,
+      tipCalcs:S.tipCalcs,
+      ids:ids,
+    };
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(persisted));
+  }catch(e){console.warn('Save failed:',e);}
+}
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const saved=JSON.parse(raw);
+    if(saved.managerPin) S.managerPin=saved.managerPin;
+    if(saved.managerPinSet!=null) S.managerPinSet=saved.managerPinSet;
+    if(saved.employees?.length) S.employees=saved.employees;
+    if(saved.schedule) S.schedule=saved.schedule;
+    if(saved.clockEntries) S.clockEntries=saved.clockEntries;
+    if(saved.pendingVerifications) S.pendingVerifications=saved.pendingVerifications;
+    if(saved.alerts) S.alerts=saved.alerts;
+    if(saved.chipLog) S.chipLog=saved.chipLog;
+    if(saved.tillCounts) S.tillCounts=saved.tillCounts;
+    if(saved.tipCalcs) S.tipCalcs=saved.tipCalcs;
+    if(saved.ids) ids=saved.ids;
+    return true;
+  }catch(e){console.warn('Load failed:',e);return false;}
+}
+
+// Wrap showToast and closeModal to auto-save on any state change
+const _origShowToast=showToast;
+showToast=function(msg){saveState();_origShowToast(msg);};
+const _origCloseModal=closeModal;
+closeModal=function(){saveState();_origCloseModal();};
+
+// ─── SEED ────────────────────────────────────────────────────
+(function init(){
+  const hadData=loadState();
+  if(!hadData){
+    // Only seed demo data on very first launch
+    const today=fmtDate(new Date()),tom=fmtDate(addDays(new Date(),1)),yest=fmtDate(addDays(new Date(),-1));
+    S.schedule[today]=[
+      {id:nid('shift'),empId:1,role:'Closing Bartender',startTime:'17:00',endTime:'02:00'},
+      {id:nid('shift'),empId:3,role:'Open Bartender',startTime:'10:00',endTime:'17:00'},
+      {id:nid('shift'),empId:2,role:'Cocktail Server',startTime:'17:00',endTime:'24:00'},
+      {id:nid('shift'),empId:4,role:'Karaoke',startTime:'20:00',endTime:'02:00'},
+      {id:nid('shift'),empId:5,role:'Kitchen',startTime:'15:00',endTime:'23:00'},
+    ];
+    S.schedule[tom]=[
+      {id:nid('shift'),empId:3,role:'Closing Bartender',startTime:'17:00',endTime:'02:00'},
+      {id:nid('shift'),empId:2,role:'Open Bartender',startTime:'10:00',endTime:'17:00'},
+    ];
+    S.schedule[yest]=[
+      {id:nid('shift'),empId:1,role:'Closing Bartender',startTime:'17:00',endTime:'02:00'},
+      {id:nid('shift'),empId:5,role:'Kitchen',startTime:'15:00',endTime:'23:00'},
+    ];
+    S.pendingVerifications.push({id:nid('verify'),fromEmpId:1,toEmpId:2,amount:18.50,date:yest,status:'pending'});
+    S.chipLog.push({id:nid('chip'),empId:1,date:yest,type:'earned',qty:1,note:'Chip not collected'});
+    S.chipLog.push({id:nid('chip'),empId:2,date:yest,type:'earned',qty:1,note:'Chip not collected'});
+    S.chipLog.push({id:nid('chip'),empId:4,date:yest,type:'earned',qty:2,note:'Chips not collected'});
+    saveState();
+  }
+})();
+
+render();
+</script>
+</body>
+</html>
