@@ -1,0 +1,1 @@
+This is an application I am working on that is designed for a client and their operations. She needed a system that will track hours, tips and calculate the free meal chip that each employee gets for their shift. This establishment is a Bar that also serves food 
